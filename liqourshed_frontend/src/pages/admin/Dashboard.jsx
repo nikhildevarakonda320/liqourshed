@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Users, 
   Package, 
@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react';
+import { getDashboardSummary, getOrders } from '../../services/api';
 
 const StatCard = ({ title, value, icon: Icon, trend, trendValue, color }) => (
   <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
@@ -25,19 +26,44 @@ const StatCard = ({ title, value, icon: Icon, trend, trendValue, color }) => (
 );
 
 const Dashboard = () => {
+  const [summary, setSummary] = useState({
+    numOrders: 0,
+    numProducts: 0,
+    numUsers: 0,
+    totalSales: 0
+  });
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [summaryData, ordersData] = await Promise.all([
+          getDashboardSummary(),
+          getOrders()
+        ]);
+        setSummary(summaryData);
+        setRecentOrders(ordersData.slice(0, 5)); // Only show last 5
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const stats = [
-    { title: 'Total Sales', value: '$24,560', icon: TrendingUp, trend: 'up', trendValue: '12%', color: 'bg-amber-500' },
-    { title: 'Total Orders', value: '456', icon: ShoppingCart, trend: 'up', trendValue: '8%', color: 'bg-blue-500' },
-    { title: 'Total Products', value: '1,234', icon: Package, trend: 'down', trendValue: '3%', color: 'bg-purple-500' },
-    { title: 'Active Users', value: '890', icon: Users, trend: 'up', trendValue: '15%', color: 'bg-emerald-500' },
+    { title: 'Total Sales', value: `$${summary.totalSales.toFixed(2)}`, icon: TrendingUp, trend: 'up', trendValue: '12%', color: 'bg-amber-500' },
+    { title: 'Total Orders', value: summary.numOrders.toString(), icon: ShoppingCart, trend: 'up', trendValue: '8%', color: 'bg-blue-500' },
+    { title: 'Total Products', value: summary.numProducts.toString(), icon: Package, trend: 'down', trendValue: '3%', color: 'bg-purple-500' },
+    { title: 'Active Users', value: summary.numUsers.toString(), icon: Users, trend: 'up', trendValue: '15%', color: 'bg-emerald-500' },
   ];
 
-  const recentOrders = [
-    { id: '#ORD-001', customer: 'John Doe', product: 'Glenfiddich 12yr', date: '2024-02-12', status: 'Delivered', amount: '$65.00' },
-    { id: '#ORD-002', customer: 'Jane Smith', product: 'Grey Goose Vodka', date: '2024-02-11', status: 'Processing', amount: '$45.00' },
-    { id: '#ORD-003', customer: 'Mike Johnson', product: 'Hennessy VSOP', date: '2024-02-11', status: 'Pending', amount: '$85.00' },
-    { id: '#ORD-004', customer: 'Sarah Wilson', product: 'Jack Daniels', date: '2024-02-10', status: 'Cancelled', amount: '$35.00' },
-  ];
+  if (loading) {
+    return <div className="flex justify-center items-center h-full">Loading...</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -63,30 +89,29 @@ const Dashboard = () => {
               <tr>
                 <th className="px-6 py-4">Order ID</th>
                 <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">Product</th>
+                <th className="px-6 py-4">Items</th>
                 <th className="px-6 py-4">Date</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Amount</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {recentOrders.map((order, index) => (
-                <tr key={index} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-slate-900">{order.id}</td>
-                  <td className="px-6 py-4 text-slate-600">{order.customer}</td>
-                  <td className="px-6 py-4 text-slate-600">{order.product}</td>
-                  <td className="px-6 py-4 text-slate-600">{order.date}</td>
+              {recentOrders.map((order) => (
+                <tr key={order._id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 font-medium text-slate-900">{order._id.substring(0, 8)}...</td>
+                  <td className="px-6 py-4 text-slate-600">{order.user?.name || 'Guest'}</td>
+                  <td className="px-6 py-4 text-slate-600">{order.orderItems.length} items</td>
+                  <td className="px-6 py-4 text-slate-600">{new Date(order.createdAt).toLocaleDateString()}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                      order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-700' :
-                      order.status === 'Processing' ? 'bg-blue-100 text-blue-700' :
-                      order.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
-                      'bg-rose-100 text-rose-700'
+                      order.isDelivered ? 'bg-emerald-100 text-emerald-700' :
+                      order.isPaid ? 'bg-blue-100 text-blue-700' :
+                      'bg-amber-100 text-amber-700'
                     }`}>
-                      {order.status}
+                      {order.isDelivered ? 'Delivered' : order.isPaid ? 'Paid' : 'Pending'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right font-bold text-slate-900">{order.amount}</td>
+                  <td className="px-6 py-4 text-right font-bold text-slate-900">${order.totalPrice.toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>

@@ -1,13 +1,47 @@
-import React from 'react';
-import { Plus, Search, Filter, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Plus, Search, Filter, Edit, Trash2 } from 'lucide-react';
+import { getLiquors, deleteProduct } from '../../services/api';
 
 const Products = () => {
-  const products = [
-    { id: 1, name: 'Glenfiddich 12yr', category: 'Whisky', stock: 45, price: '$65.00', status: 'In Stock' },
-    { id: 2, name: 'Grey Goose Vodka', category: 'Vodka', stock: 12, price: '$45.00', status: 'Low Stock' },
-    { id: 3, name: 'Hennessy VSOP', category: 'Cognac', stock: 28, price: '$85.00', status: 'In Stock' },
-    { id: 4, name: 'Moët & Chandon', category: 'Champagne', stock: 0, price: '$55.00', status: 'Out of Stock' },
-  ];
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchProducts = async () => {
+    try {
+      const data = await getLiquors();
+      setProducts(data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this product?')) {
+      try {
+        await deleteProduct(id);
+        fetchProducts();
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        alert('Failed to delete product');
+      }
+    }
+  };
+
+  const filteredProducts = products.filter(p => 
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.category.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-full">Loading...</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -29,6 +63,8 @@ const Products = () => {
             <input 
               type="text" 
               placeholder="Search products..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
             />
           </div>
@@ -53,19 +89,19 @@ const Products = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {products.map((product) => (
-                <tr key={product.id} className="hover:bg-slate-50 transition-colors">
+              {filteredProducts.map((product) => (
+                <tr key={product._id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4 font-medium text-slate-900">{product.name}</td>
                   <td className="px-6 py-4 text-slate-600">{product.category}</td>
-                  <td className="px-6 py-4 text-slate-600">{product.stock} units</td>
-                  <td className="px-6 py-4 text-slate-900 font-bold">{product.price}</td>
+                  <td className="px-6 py-4 text-slate-600">{product.countInStock} units</td>
+                  <td className="px-6 py-4 text-slate-900 font-bold">${product.price.toFixed(2)}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                      product.status === 'In Stock' ? 'bg-emerald-100 text-emerald-700' :
-                      product.status === 'Low Stock' ? 'bg-amber-100 text-amber-700' :
+                      product.countInStock > 10 ? 'bg-emerald-100 text-emerald-700' :
+                      product.countInStock > 0 ? 'bg-amber-100 text-amber-700' :
                       'bg-rose-100 text-rose-700'
                     }`}>
-                      {product.status}
+                      {product.countInStock > 10 ? 'In Stock' : product.countInStock > 0 ? 'Low Stock' : 'Out of Stock'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -73,7 +109,10 @@ const Products = () => {
                       <button className="p-1.5 text-slate-400 hover:text-blue-600 transition-colors">
                         <Edit size={18} />
                       </button>
-                      <button className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors">
+                      <button 
+                        onClick={() => handleDelete(product._id)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
+                      >
                         <Trash2 size={18} />
                       </button>
                     </div>

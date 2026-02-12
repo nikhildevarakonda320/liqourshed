@@ -34,7 +34,7 @@ const LiquorList = () => {
       <h2 className="text-3xl font-bold text-slate-800 mb-8 border-b pb-4 border-slate-200">Our Collection</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {liquors.map((liquor) => (
-          <LiquorCard key={liquor.idStr || liquor.strIngredient} liquor={liquor} />
+          <LiquorCard key={liquor._id} liquor={liquor} />
         ))}
       </div>
     </div>
