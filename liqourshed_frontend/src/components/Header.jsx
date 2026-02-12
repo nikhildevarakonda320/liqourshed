@@ -66,6 +66,7 @@ const Header = () => {
               <nav className="hidden md:flex items-center space-x-10 text-sm font-medium tracking-widest text-slate-600">
                 <Link to="/" className="hover:text-[#800000] transition">HOME</Link>
                 <Link to="/" className="text-[#D02046] border-b-2 border-[#D02046] pb-1">SHOP</Link>
+                <Link to="/admin" className="hover:text-[#800000] transition">ADMIN</Link>
                 <Link to="/" className="hover:text-[#800000] transition">CONTACT US</Link>
               </nav>
 
