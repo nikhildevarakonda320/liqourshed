@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { loginUser, registerUser as apiRegisterUser, getUserProfile } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -9,62 +10,64 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check local storage for existing user session
-    const savedUser = localStorage.getItem('liquorshed_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    const initAuth = async () => {
+      const savedUser = localStorage.getItem('userInfo');
+      if (savedUser) {
+        try {
+          // Instead of just setting the saved user, fetch the latest from MongoDB
+          const data = await getUserProfile();
+          // We need to keep the token from localStorage if the profile endpoint doesn't return it
+          const userInfo = JSON.parse(savedUser);
+          const updatedUser = { ...data, token: userInfo.token };
+          setUser(updatedUser);
+          localStorage.setItem('userInfo', JSON.stringify(updatedUser));
+        } catch (error) {
+          console.error('Failed to fetch user profile:', error);
+          localStorage.removeItem('userInfo');
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const login = async (email, password) => {
-    // Mock login logic
-    const users = JSON.parse(localStorage.getItem('liquorshed_mock_users') || '[]');
-    const foundUser = users.find(u => u.email === email && u.password === password);
-
-    if (foundUser) {
-      const { password, ...userWithoutPassword } = foundUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('liquorshed_user', JSON.stringify(userWithoutPassword));
+    try {
+      const data = await loginUser(email, password);
+      setUser(data);
+      localStorage.setItem('userInfo', JSON.stringify(data));
       return { success: true };
-    } else {
-      return { success: false, message: 'Invalid email or password' };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Invalid email or password' 
+      };
     }
   };
 
   const register = async (email, password, additionalData = {}) => {
-    // Mock registration logic
-    const users = JSON.parse(localStorage.getItem('liquorshed_mock_users') || '[]');
-    
-    if (users.find(u => u.email === email)) {
-      return { success: false, message: 'Email is already in use' };
+    try {
+      const { name } = additionalData;
+      const data = await apiRegisterUser(name, email, password);
+      setUser(data);
+      localStorage.setItem('userInfo', JSON.stringify(data));
+      return { 
+        success: true, 
+        message: 'Registration successful!' 
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Registration failed' 
+      };
     }
-
-    const newUser = {
-      uid: Math.random().toString(36).substr(2, 9),
-      email,
-      password, // In a real app, never store plain text passwords!
-      ...additionalData,
-      createdAt: new Date().toISOString()
-    };
-
-    users.push(newUser);
-    localStorage.setItem('liquorshed_mock_users', JSON.stringify(users));
-
-    // Automatically log in after registration
-    const { password: _, ...userWithoutPassword } = newUser;
-    setUser(userWithoutPassword);
-    localStorage.setItem('liquorshed_user', JSON.stringify(userWithoutPassword));
-
-    return { 
-      success: true, 
-      message: 'Registration successful!' 
-    };
   };
 
   const logout = async () => {
     setUser(null);
-    localStorage.removeItem('liquorshed_user');
+    localStorage.removeItem('userInfo');
   };
 
   return (
