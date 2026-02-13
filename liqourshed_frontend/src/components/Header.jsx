@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaSearch, FaShoppingCart, FaUser, FaWineBottle, FaTimes } from 'react-icons/fa';
+import { useCart } from '../context/CartContext';
+import { FaSearch, FaShoppingCart, FaUser, FaWineBottle, FaTimes, FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
 import AuthModal from './AuthModal';
 import RegistrationModal from './RegistrationModal';
 
 const Header = () => {
   const { user, logout } = useAuth();
+  const { cartItems, cartTotal, cartCount, removeFromCart, updateQty, isCartOpen, setIsCartOpen } = useCart();
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -65,23 +67,59 @@ const Header = () => {
               {/* Main Nav Links */}
               <nav className="hidden md:flex items-center space-x-10 text-sm font-medium tracking-widest text-slate-600">
                 <Link to="/" className="hover:text-[#800000] transition">HOME</Link>
-                <Link to="/" className="text-[#D02046] border-b-2 border-[#D02046] pb-1">SHOP</Link>
-                <Link to="/admin" className="hover:text-[#800000] transition">ADMIN</Link>
+                
+                {/* SHOP Dropdown */}
+                <div className="relative group">
+                  <button className="text-[#D02046] border-b-2 border-[#D02046] pb-1 hover:text-[#800000] transition flex items-center">
+                    SHOP
+                  </button>
+                  <div className="absolute left-0 top-full pt-2 w-48 hidden group-hover:block z-50">
+                    <div className="bg-white border border-gray-100 shadow-xl rounded-md overflow-hidden">
+                      <Link 
+                        to="/shop/wine" 
+                        className="block w-full text-left px-4 py-3 text-sm text-slate-600 hover:bg-gray-50 hover:text-[#D02046] transition-colors"
+                      >
+                        WINE
+                      </Link>
+                      <Link 
+                        to="/shop/liquor" 
+                        className="block w-full text-left px-4 py-3 text-sm text-slate-600 hover:bg-gray-50 hover:text-[#D02046] transition-colors"
+                      >
+                        LIQUOR
+                      </Link>
+                      <Link 
+                        to="/shop/cans" 
+                        className="block w-full text-left px-4 py-3 text-sm text-slate-600 hover:bg-gray-50 hover:text-[#D02046] transition-colors"
+                      >
+                        CANS
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
                 <Link to="/" className="hover:text-[#800000] transition">CONTACT US</Link>
               </nav>
 
-              {/* Icons Section */}
-              <div className="flex items-center space-x-6 text-slate-800">
+              {/* Actions Icons */}
+              <div className="flex items-center space-x-6 text-slate-700">
                 <button 
                   onClick={() => setIsSearchOpen(true)}
-                  className="hover:text-[#800000] transition"
+                  className="hover:text-[#800000] transition flex items-center group"
                 >
-                  <FaSearch className="text-xl" />
+                  <FaSearch className="text-xl group-hover:scale-110 transition" />
                 </button>
                 
-                <button className="hover:text-[#800000] transition relative">
-                  <FaShoppingCart className="text-xl" />
-                  <span className="absolute -top-2 -right-2 bg-gray-200 text-slate-700 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">1</span>
+                {/* Cart Icon with Badge */}
+                <button 
+                  onClick={() => setIsCartOpen(true)}
+                  className="hover:text-[#800000] transition relative group flex items-center"
+                >
+                  <FaShoppingCart className="text-xl group-hover:scale-110 transition" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-[#D02046] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-bounce-short">
+                      {cartCount}
+                    </span>
+                  )}
                 </button>
 
                 {/* Auth User Icon/Menu */}
@@ -96,13 +134,23 @@ const Header = () => {
                   
                   {/* Simple Dropdown for Logged In User Only */}
                   {user && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 shadow-xl rounded-md overflow-hidden hidden group-hover:block z-50">
-                      <button 
-                        onClick={handleLogout}
-                        className="block w-full text-left px-4 py-3 text-sm text-slate-600 hover:bg-gray-50 hover:text-[#800000]"
-                      >
-                        Logout
-                      </button>
+                    <div className="absolute right-0 top-full pt-2 w-48 hidden group-hover:block z-50">
+                      <div className="bg-white border border-gray-100 shadow-xl rounded-md overflow-hidden">
+                        {user.isAdmin && (
+                          <Link 
+                            to="/admin" 
+                            className="block w-full text-left px-4 py-3 text-sm text-slate-600 hover:bg-gray-50 hover:text-[#800000] border-b border-gray-50"
+                          >
+                            Admin Dashboard
+                          </Link>
+                        )}
+                        <button 
+                          onClick={handleLogout}
+                          className="block w-full text-left px-4 py-3 text-sm text-slate-600 hover:bg-gray-50 hover:text-[#800000]"
+                        >
+                          Logout
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -118,10 +166,111 @@ const Header = () => {
         onClose={() => setIsAuthModalOpen(false)} 
         onRegisterClick={openRegistration}
       />
-      <RegistrationModal
-        isOpen={isRegistrationModalOpen}
-        onClose={() => setIsRegistrationModalOpen(false)}
+      <RegistrationModal 
+        isOpen={isRegistrationModalOpen} 
+        onClose={() => setIsRegistrationModalOpen(false)} 
       />
+
+      {/* Shopping Cart Drawer */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-[100] overflow-hidden">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsCartOpen(false)}></div>
+          <div className="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl animate-slide-left flex flex-col">
+            {/* Cart Header */}
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center">
+                <FaShoppingCart className="mr-2 text-[#D02046]" />
+                YOUR CART ({cartCount})
+              </h2>
+              <button onClick={() => setIsCartOpen(false)} className="text-slate-400 hover:text-slate-600 transition">
+                <FaTimes className="text-xl" />
+              </button>
+            </div>
+
+            {/* Cart Items */}
+            <div className="flex-grow overflow-y-auto p-6">
+              {cartItems.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                  <FaShoppingCart className="text-6xl mb-4 opacity-20" />
+                  <p className="text-lg">Your cart is empty</p>
+                  <button 
+                    onClick={() => {
+                      setIsCartOpen(false);
+                      navigate('/');
+                    }}
+                    className="mt-6 text-[#D02046] font-bold hover:underline"
+                  >
+                    START SHOPPING
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {cartItems.map((item) => (
+                    <div key={item._id} className="flex space-x-4 pb-6 border-b border-slate-100">
+                      <div className="w-20 h-20 bg-slate-50 rounded p-2 flex-shrink-0">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                      </div>
+                      <div className="flex-grow">
+                        <div className="flex justify-between">
+                          <h3 className="font-bold text-slate-800 text-sm">{item.name}</h3>
+                          <button onClick={() => removeFromCart(item._id)} className="text-slate-300 hover:text-rose-500 transition">
+                            <FaTrash size={12} />
+                          </button>
+                        </div>
+                        <p className="text-xs text-slate-500 mb-2 uppercase tracking-tighter">{item.category}</p>
+                        <div className="flex justify-between items-center mt-2">
+                          <div className="flex items-center border rounded overflow-hidden">
+                            <button 
+                              onClick={() => updateQty(item._id, Math.max(1, item.qty - 1))}
+                              className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-slate-600"
+                            >
+                              <FaMinus size={8} />
+                            </button>
+                            <span className="px-3 py-1 text-sm font-medium">{item.qty}</span>
+                            <button 
+                              onClick={() => updateQty(item._id, item.qty + 1)}
+                              className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-slate-600"
+                            >
+                              <FaPlus size={8} />
+                            </button>
+                          </div>
+                          <span className="font-bold text-slate-900">${(item.price * item.qty).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Cart Footer */}
+            {cartItems.length > 0 && (
+              <div className="p-6 border-t bg-slate-50 space-y-4">
+                <div className="flex justify-between items-center text-slate-800">
+                  <span className="font-medium">Subtotal</span>
+                  <span className="text-2xl font-bold">${cartTotal.toFixed(2)}</span>
+                </div>
+                <p className="text-xs text-slate-500 italic text-center">Shipping & taxes calculated at checkout</p>
+                <button 
+                  onClick={() => {
+                    setIsCartOpen(false);
+                    navigate('/checkout');
+                  }}
+                  className="w-full bg-[#D02046] hover:bg-[#800000] text-white py-4 rounded font-bold transition shadow-lg tracking-widest"
+                >
+                  CHECKOUT NOW
+                </button>
+                <button 
+                  onClick={() => setIsCartOpen(false)}
+                  className="w-full text-center text-sm font-medium text-slate-500 hover:text-slate-800 transition"
+                >
+                  CONTINUE SHOPPING
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 };

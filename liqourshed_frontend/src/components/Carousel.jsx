@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -40,6 +41,8 @@ const SLIDES = [
 ];
 
 const Carousel = ({ onLiquorClick }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="w-full h-[70vh] relative bg-black group">
       <Swiper
@@ -68,7 +71,13 @@ const Carousel = ({ onLiquorClick }) => {
               <p className="text-slate-100 text-xl md:text-3xl font-light tracking-widest uppercase mb-10 drop-shadow-lg animate-fade-in-up delay-100 border-t border-b border-white/30 py-3 px-10 backdrop-blur-sm">
                 {slide.subtitle}
               </p>
-              <button className="px-8 py-3 bg-amber-700/90 hover:bg-amber-600 text-white text-base font-medium tracking-wider rounded-sm transition transform hover:scale-105 shadow-2xl animate-fade-in-up delay-200 border border-amber-500/50 backdrop-blur-md">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/shop/wine');
+                }}
+                className="px-8 py-3 bg-amber-700/90 hover:bg-amber-600 text-white text-base font-medium tracking-wider rounded-sm transition transform hover:scale-105 shadow-2xl animate-fade-in-up delay-200 border border-amber-500/50 backdrop-blur-md"
+              >
                 EXPLORE COLLECTION
               </button>
             </div>

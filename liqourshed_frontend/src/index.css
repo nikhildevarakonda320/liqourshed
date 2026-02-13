@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .animate-bounce-short {
+    animation: bounce-short 1s ease-in-out 2;
+  }
+
+  .animate-slide-left {
+    animation: slide-left 0.3s ease-out forwards;
+  }
+
+  @keyframes bounce-short {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  @keyframes slide-left {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+}

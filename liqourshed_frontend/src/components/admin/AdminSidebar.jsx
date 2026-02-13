@@ -1,16 +1,25 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { 
   LayoutDashboard, 
   Package, 
   ShoppingCart, 
   Users, 
   Settings,
-  LogOut
+  LogOut,
+  Home
 } from 'lucide-react';
 
 const AdminSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
@@ -27,6 +36,14 @@ const AdminSidebar = () => {
       </div>
       
       <nav className="flex-grow p-4 space-y-2">
+        <Link
+          to="/"
+          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors mb-4"
+        >
+          <Home size={20} />
+          <span className="font-medium">Back to Website</span>
+        </Link>
+        <div className="h-px bg-slate-800 my-4"></div>
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
@@ -49,7 +66,10 @@ const AdminSidebar = () => {
       </nav>
 
       <div className="p-4 border-t border-slate-800">
-        <button className="flex items-center space-x-3 px-4 py-3 w-full text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-colors">
+        <button 
+          onClick={handleLogout}
+          className="flex items-center space-x-3 px-4 py-3 w-full text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-colors"
+        >
           <LogOut size={20} />
           <span className="font-medium">Logout</span>
         </button>

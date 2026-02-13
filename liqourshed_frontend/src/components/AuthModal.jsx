@@ -16,7 +16,11 @@ const AuthModal = ({ isOpen, onClose, onRegisterClick }) => {
     const result = await login(email, password);
     if (result.success) {
       onClose();
-      navigate('/');
+      if (result.user.isAdmin) {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } else {
       alert(result.message);
     }

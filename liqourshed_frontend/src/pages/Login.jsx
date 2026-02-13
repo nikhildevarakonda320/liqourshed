@@ -16,7 +16,12 @@ const Login = () => {
     e.preventDefault();
     const result = await login(email, password);
     if (result.success) {
-      navigate(from, { replace: true });
+      // If user is admin and not coming from a specific page, go to admin dashboard
+      if (result.user.isAdmin && from === "/") {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     } else {
       setError(result.message);
     }

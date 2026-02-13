@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
       const data = await loginUser(email, password);
       setUser(data);
       localStorage.setItem('userInfo', JSON.stringify(data));
-      return { success: true };
+      return { success: true, user: data };
     } catch (error) {
       return { 
         success: false, 
@@ -49,13 +49,16 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (email, password, additionalData = {}) => {
     try {
-      const { name } = additionalData;
+      const { firstName, lastName } = additionalData;
+      const name = additionalData.name || `${firstName} ${lastName}`.trim();
+      
       const data = await apiRegisterUser(name, email, password);
       setUser(data);
       localStorage.setItem('userInfo', JSON.stringify(data));
       return { 
         success: true, 
-        message: 'Registration successful!' 
+        message: 'Registration successful!',
+        user: data
       };
     } catch (error) {
       return { 

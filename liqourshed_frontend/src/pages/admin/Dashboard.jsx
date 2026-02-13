@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Users, 
   Package, 
@@ -81,7 +82,7 @@ const Dashboard = () => {
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-200 flex items-center justify-between">
           <h3 className="text-lg font-bold text-slate-900">Recent Orders</h3>
-          <button className="text-amber-600 hover:text-amber-700 font-medium text-sm">View All</button>
+          <Link to="/admin/orders" className="text-amber-600 hover:text-amber-700 font-medium text-sm">View All</Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">

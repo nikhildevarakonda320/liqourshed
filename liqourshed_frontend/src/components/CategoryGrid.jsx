@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -60,7 +61,11 @@ const CategoryGrid = () => {
       {/* Top Grid: Two Large Items */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
         {categories.slice(0, 2).map((cat, idx) => (
-          <div key={idx} className="h-96 relative group cursor-pointer overflow-hidden rounded-xl shadow-2xl">
+          <Link 
+            key={idx} 
+            to={`/shop/${cat.title.toLowerCase()}`}
+            className="h-96 relative group cursor-pointer overflow-hidden rounded-xl shadow-2xl"
+          >
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition duration-300 z-10"></div>
             <img 
               src={cat.image} 
@@ -70,7 +75,7 @@ const CategoryGrid = () => {
             <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent p-8 z-20">
               <h3 className="text-4xl font-bold text-white uppercase tracking-wider drop-shadow-md">{cat.title}</h3>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
@@ -93,17 +98,20 @@ const CategoryGrid = () => {
         >
           {categories.slice(2).map((cat, idx) => (
             <SwiperSlide key={idx}>
-              <div className="h-72 relative cursor-pointer overflow-hidden rounded-xl shadow-lg border border-slate-100 hover:shadow-xl transition-shadow">
+              <Link 
+                to={`/shop/${cat.title.toLowerCase()}`}
+                className="h-72 block relative cursor-pointer overflow-hidden rounded-xl shadow-lg border border-slate-100 hover:shadow-xl transition-shadow bg-white"
+              >
                 <img 
                   src={cat.image} 
                   alt={cat.title} 
                   className="w-full h-48 object-cover"
                 />
-                <div className="absolute bottom-0 left-0 w-full h-24 bg-slate-800 p-4 flex flex-col justify-center">
-                  <h3 className="text-xl font-bold text-white">{cat.title}</h3>
-                  {cat.subtitle && <p className="text-slate-300 text-sm mt-1">{cat.subtitle}</p>}
+                <div className="p-4">
+                  <h3 className="text-lg font-bold text-slate-800 uppercase tracking-wide">{cat.title}</h3>
+                  <p className="text-xs text-slate-500 mt-1">{cat.subtitle}</p>
                 </div>
-              </div>
+              </Link>
             </SwiperSlide>
           ))}
         </Swiper>

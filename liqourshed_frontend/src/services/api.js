@@ -37,10 +37,16 @@ export const getUserProfile = async () => {
   return response.data;
 };
 
+export const getAllUsers = async () => {
+  const response = await api.get('/users');
+  return response.data;
+};
+
 // Product APIs
-export const getLiquors = async () => {
+export const getLiquors = async (category = '') => {
   try {
-    const response = await api.get('/products');
+    const url = category ? `/products?category=${category}` : '/products';
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error('Error fetching liquors:', error);
@@ -71,6 +77,16 @@ export const createOrder = async (orderData) => {
 // Order APIs
 export const getOrders = async () => {
   const response = await api.get('/orders');
+  return response.data;
+};
+
+export const getOrderById = async (id) => {
+  const response = await api.get(`/orders/${id}`);
+  return response.data;
+};
+
+export const deliverOrder = async (id) => {
+  const response = await api.put(`/orders/${id}/deliver`);
   return response.data;
 };
 
